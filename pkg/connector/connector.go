@@ -20,13 +20,11 @@ func NewConnector(client *miro.Client, sink *sink.Sink, userId string) *Connecto
 func (c *Connector) QuickSync() {
 	defer c.sink.Dump(c.userId)
 	defer c.sink.Close()
-	c.syncData()
-}
-
-func (c *Connector) syncData() {
 	boards := c.miroClient.GetBoards()
 	boardItems := make(chan miro.BoardItem, 50)
+	done := make(chan bool)
 
+	// sync boards
 	go func() {
 		var wg sync.WaitGroup
 		defer close(boardItems)
@@ -37,19 +35,28 @@ func (c *Connector) syncData() {
 			}
 			board := boardResult.Board
 			c.sink.Push(board.ToEntity(c.userId))
+
+			// trigger board items sync
 			wg.Add(1)
 			go func() {
-				c.streamBoardItems(board.ID, boardItems, &wg)
+				defer wg.Done()
+				c.streamBoardItems(board.ID, boardItems)
 			}()
 		}
 	}()
 
-	for boardItem := range boardItems {
-		c.sink.Push(boardItem.ToEntity(c.userId))
-	}
+	// sync board items
+	go func() {
+		for boardItem := range boardItems {
+			c.sink.Push(boardItem.ToEntity(c.userId))
+		}
+		done <- true
+	}()
+
+	<-done
 }
 
-func (c *Connector) streamBoardItems(boardId string, items chan<- miro.BoardItem, wg *sync.WaitGroup) {
+func (c *Connector) streamBoardItems(boardId string, items chan<- miro.BoardItem) {
 	boardItemResults := c.miroClient.GetBoardItems(boardId)
 	for itemResult := range boardItemResults {
 		if itemResult.Error != nil {
@@ -57,5 +64,4 @@ func (c *Connector) streamBoardItems(boardId string, items chan<- miro.BoardItem
 		}
 		items <- itemResult.Result
 	}
-	wg.Done()
 }
