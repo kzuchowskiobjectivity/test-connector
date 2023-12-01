@@ -1,6 +1,11 @@
 package sink
 
-import "connectors/pkg/entities"
+import (
+	"encoding/json"
+	"fmt"
+	"miroconnector/pkg/entities"
+	"os"
+)
 
 func New(bufferSize uint64) *Sink {
 	s := &Sink{
@@ -36,9 +41,24 @@ func (s *Sink) Push(e entities.Entity) {
 	s.clientChan <- e
 }
 
-func (s *Sink) Dump() []entities.Entity {
+func (s *Sink) Dump(ownerId string) ([]entities.Entity, error) {
 	<-s.readingIsDone
-	return s.allEntities
+	fileBytes, err := json.Marshal(s.allEntities)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal entities: %w", err)
+	}
+
+	file, err := os.Create(fmt.Sprintf("%s.json", ownerId))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create file: %w", err)
+	}
+
+	_, err = file.Write(fileBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return s.allEntities, nil
 }
 
 func (s *Sink) add(e entities.Entity) {

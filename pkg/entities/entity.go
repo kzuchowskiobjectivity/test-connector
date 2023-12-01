@@ -2,10 +2,6 @@ package entities
 
 import "time"
 
-type ToEntity interface {
-	ToEntity(ownerId string) (Entity, error)
-}
-
 type Entity struct {
 	Name         string    //Name/title of the entity
 	EntityUrl    string    //Url to the entity (so it can be opened in a browser)

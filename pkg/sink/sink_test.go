@@ -1,8 +1,9 @@
 package sink_test
 
 import (
-	"connectors/pkg/entities"
-	"connectors/pkg/sink"
+	"log"
+	"miroconnector/pkg/entities"
+	"miroconnector/pkg/sink"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,10 @@ func TestSink(t *testing.T) {
 			}
 			s.Close()
 
-			allEntities := s.Dump()
+			allEntities, err := s.Dump("test")
+			if err != nil {
+				log.Fatal(err)
+			}
 			assert.Equal(t, len(tc.dataToPush), len(allEntities))
 			assert.Equal(t, tc.dataToPush, allEntities)
 		})
