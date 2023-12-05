@@ -24,6 +24,7 @@ func (c *Connector) QuickSync() {
 	boardItems := make(chan miro.BoardItem, 50)
 	done := make(chan bool)
 
+	// move to function
 	// sync boards
 	go func() {
 		var wg sync.WaitGroup
@@ -45,6 +46,7 @@ func (c *Connector) QuickSync() {
 		}
 	}()
 
+	// move to function
 	// sync board items
 	go func() {
 		for boardItem := range boardItems {

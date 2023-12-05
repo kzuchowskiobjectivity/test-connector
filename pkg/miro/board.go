@@ -13,6 +13,7 @@ type BoardResult struct {
 	Error error
 }
 
+// add tests
 func (c *Client) GetBoards() <-chan BoardResult {
 	size := 50
 	ch := make(chan BoardResult, size)
@@ -37,21 +38,26 @@ func (c *Client) GetBoards() <-chan BoardResult {
 
 func (c *Client) getBoards(offset int, limit int) ([]Board, error) {
 	url := fmt.Sprintf("%s/boards?limit=%d&offset=%d", c.url, limit, offset)
+
+	// should you add to header before error check?
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Add("authorization", fmt.Sprintf("Bearer %s", c.apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
 	}
+
 	response, err := c.doRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to perform http request: %w", err)
 	}
+
 	defer response.Body.Close()
 	var boards BoardsResponse
 	err = json.NewDecoder(response.Body).Decode(&boards)
 	if err != nil {
 		return nil, fmt.Errorf("error when decoding json: %w", err)
 	}
+
 	return boards.Data, nil
 }
 

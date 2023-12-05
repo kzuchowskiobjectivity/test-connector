@@ -6,6 +6,13 @@ import (
 	"net/http"
 )
 
+// tests ??
+// for client you can create proper interface
+// in test add mock
+// and then you can create proper tests
+// http.DefaultClient should by hidden under interface
+// use this or any other option to mock http call
+// https://github.com/stretchr/testify#mock-package
 type Client struct {
 	client  *http.Client
 	url     string

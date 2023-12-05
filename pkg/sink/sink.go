@@ -41,6 +41,9 @@ func (s *Sink) Push(e entities.Entity) {
 	s.clientChan <- e
 }
 
+// consider using io.ReadCloser or function returning io.ReadCloser, error
+// add proper test
+// similar concept to https://github.com/gciezkowskiobjectivity/connectors/blob/main/pkg/idstorage/idstorage.go
 func (s *Sink) Dump(ownerId string) ([]entities.Entity, error) {
 	<-s.readingIsDone
 	fileBytes, err := json.Marshal(s.allEntities)
@@ -48,6 +51,7 @@ func (s *Sink) Dump(ownerId string) ([]entities.Entity, error) {
 		return nil, fmt.Errorf("failed to marshal entities: %w", err)
 	}
 
+	// close file/io.ReadCloser in defer
 	file, err := os.Create(fmt.Sprintf("%s.json", ownerId))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file: %w", err)
